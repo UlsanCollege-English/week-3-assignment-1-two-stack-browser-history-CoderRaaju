@@ -1,37 +1,47 @@
+
 class BrowserHistory:
-    def __init__(self):
-        self._history = []       # stores visited URLs
-        self._current_index = -1 # pointer to the current page (-1 means no page yet)
+    def __init__(self, start="home"):
+        self.cur = start
+        self.back_stack = []
+        self.fwd_stack = []
 
-    def visit(self, url: str):
-        """Visit a new URL and clear forward history."""
-        # Remove any forward history when visiting a new URL
-        if self._current_index < len(self._history) - 1:
-            self._history = self._history[:self._current_index + 1]
-
-        self._history.append(url)
-        self._current_index += 1
+    def visit(self, url):
+        if self.cur != "home" or self.back_stack or self.fwd_stack:
+            self.back_stack.append(self.cur)
+        self.cur = url
+        self.fwd_stack.clear()
 
     def back(self):
-        """Go back one step in history. Returns the URL or None if not possible."""
-        if self._current_index > 0:
-            self._current_index -= 1
-            return self._history[self._current_index]
-        return None
+        if not self.back_stack:
+            raise IndexError("No pages in back history")
+        self.fwd_stack.append(self.cur)
+        self.cur = self.back_stack.pop()
+        return self.cur
 
     def forward(self):
-        """Go forward one step in history. Returns the URL or None if not possible."""
-        if self._current_index < len(self._history) - 1:
-            self._current_index += 1
-            return self._history[self._current_index]
-        return None
+        if not self.fwd_stack:
+            raise IndexError("No pages in forward history")
+        self.back_stack.append(self.cur)
+        self.cur = self.fwd_stack.pop()
+        return self.cur
 
     def current(self):
-        """Return the current URL or None if empty."""
-        if self._current_index >= 0:
-            return self._history[self._current_index]
-        return None
+        return self.cur
 
-    def history(self):
-        """Return the full history list."""
-        return list(self._history)
+
+
+if __name__ == "__main__":
+    h = BrowserHistory()
+    print("Start:", h.current())   
+    h.visit("a"); h.visit("b"); h.visit("c")
+    print("Back:", h.back())       
+    print("Back:", h.back())       
+    try:
+        print("Back again:", h.back())  
+    except IndexError as e:
+        print("Error:", e)
+    h.visit("x")
+    try:
+        print("Forward:", h.forward())  
+    except IndexError as e:
+        print("Error:", e)
