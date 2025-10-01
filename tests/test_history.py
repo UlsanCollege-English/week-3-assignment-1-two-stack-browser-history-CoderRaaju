@@ -3,53 +3,50 @@ from src.history import BrowserHistory
 
 def test_visit_and_current():
     h = BrowserHistory()
-    assert h.current() == "home"
-    h.visit("a"); h.visit("b")
-    assert h.current() == "b"
+    assert h.current() is None
 
-def test_back_forward_flow():
-    h = BrowserHistory()
-    h.visit("a"); h.visit("b"); h.visit("c")
-    assert h.back() == "b"
-    assert h.back() == "a"
-    assert h.forward() == "b"
-    h.visit("x")
-    with pytest.raises(IndexError):
-        h.forward()
-    assert h.current() == "x"
+    h.visit("google.com")
+    assert h.current() == "google.com"
 
-def test_back_underflow():
-    h = BrowserHistory()
-    with pytest.raises(IndexError):
-        h.back()
+    h.visit("github.com")
+    assert h.current() == "github.com"
 
-# --- Edge Cases ---
-def test_edge_back_at_start_raises():
+def test_back_functionality():
     h = BrowserHistory()
-    # no pages visited yet beyond "home"
-    with pytest.raises(IndexError):
-        h.back()
-    assert h.current() == "home"
+    h.visit("google.com")
+    h.visit("github.com")
+    h.visit("openai.com")
 
-def test_edge_forward_when_empty_raises():
-    h = BrowserHistory()
-    h.visit("a")
-    with pytest.raises(IndexError):
-        h.forward()  # no forward history after a fresh visit
+    assert h.current() == "openai.com"
+    assert h.back() == "github.com"
+    assert h.current() == "github.com"
+    assert h.back() == "google.com"
+    assert h.current() == "google.com"
+    assert h.back() is None  # can't go back further
 
-# --- Longer Scenario ---
-def test_long_navigation_session():
+def test_forward_functionality():
     h = BrowserHistory()
-    h.visit("a"); h.visit("b"); h.visit("c")
-    assert h.back() == "b"      # c -> b
-    h.visit("x")                # clears forward stack
-    with pytest.raises(IndexError):
-        h.forward()
-    h.visit("y"); h.visit("z")
-    assert h.back() == "y"
-    assert h.back() == "x"
-    assert h.back() == "b"
-    assert h.back() == "a"
-    with pytest.raises(IndexError):
-        h.back()
-    assert h.current() == "a"
+    h.visit("google.com")
+    h.visit("github.com")
+    h.visit("openai.com")
+
+    h.back()   # now at github.com
+    h.back()   # now at google.com
+    assert h.current() == "google.com"
+
+    assert h.forward() == "github.com"
+    assert h.forward() == "openai.com"
+    assert h.forward() is None  # can't go forward more
+
+def test_visit_clears_forward_history():
+    h = BrowserHistory()
+    h.visit("google.com")
+    h.visit("github.com")
+    h.visit("openai.com")
+
+    h.back()   # github.com
+    h.visit("reddit.com")  # clears forward history
+
+    assert h.current() == "reddit.com"
+    assert h.forward() is None
+    assert h.history() == ["google.com", "github.com", "reddit.com"]

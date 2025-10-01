@@ -1,38 +1,37 @@
-```python
-
-
 class BrowserHistory:
-    def __init__(self, start="home"):
-        self._cur = start
-        self._back = []  
-        self._fwd = []  
+    def __init__(self):
+        self._history = []       # stores visited URLs
+        self._current_index = -1 # pointer to the current page (-1 means no page yet)
 
-    def visit(self, url: str) -> None:
-      
-        self._back.append(self._cur)
-        
-        self._cur = url
-      
-        self._fwd.clear()
+    def visit(self, url: str):
+        """Visit a new URL and clear forward history."""
+        # Remove any forward history when visiting a new URL
+        if self._current_index < len(self._history) - 1:
+            self._history = self._history[:self._current_index + 1]
 
-    def back(self) -> str:
-        if not self._back:
-            raise IndexError("No back history")
-      
-        self._fwd.append(self._cur)
-       
-        self._cur = self._back.pop()
-        return self._cur
+        self._history.append(url)
+        self._current_index += 1
 
-    def forward(self) -> str:
-        if not self._fwd:
-            raise IndexError("No forward history")
-       
-        self._back.append(self._cur)
-      
-        self._cur = self._fwd.pop()
-        return self._cur
+    def back(self):
+        """Go back one step in history. Returns the URL or None if not possible."""
+        if self._current_index > 0:
+            self._current_index -= 1
+            return self._history[self._current_index]
+        return None
 
-    def current(self) -> str:
-        return self._cur
-```
+    def forward(self):
+        """Go forward one step in history. Returns the URL or None if not possible."""
+        if self._current_index < len(self._history) - 1:
+            self._current_index += 1
+            return self._history[self._current_index]
+        return None
+
+    def current(self):
+        """Return the current URL or None if empty."""
+        if self._current_index >= 0:
+            return self._history[self._current_index]
+        return None
+
+    def history(self):
+        """Return the full history list."""
+        return list(self._history)
